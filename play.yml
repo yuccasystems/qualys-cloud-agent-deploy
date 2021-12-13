@@ -1,0 +1,44 @@
+# Yucca Systems Inc.
+# This ansible playbook installs and runs the Qualys cloud agent for Centos/RHEL and Debian
+# Bash command : /usr/local/qualys/cloud-agent/bin/qualys-cloud-agent.sh ActivationId=xxxx-xx-xxxxxx CustomerId=xxxx-xx-xxxxxx
+#
+# Tip : Replace ActivationId and CustomerId by your Activation Key's information
+
+---
+- hosts: all
+  gather_facts: true
+  remote_user: user
+  become: yes
+
+  vars:
+        qualys_url: https://qagpublic.qg2.apps.qualys.com
+        activationid: ActivationId=xxxx-xx-xxxxxx
+        customerid: CustomerId=xxxx-xx-xxxxxx
+        agent_path: /tmp/qualys-cloud-agent.x86_64.rpm
+
+  tasks:
+
+    - name: Copy the cloud agent .rpm file
+      copy:
+          src: qualys-cloud-agent.x86_64.rpm
+          dest: "{{ agent_path }}"
+          mode: 00700
+      changed_when: false
+
+    - name: Install the cloud agent package 
+      yum:
+         name: "{{ agent_path }}"
+         state: present
+
+    - name: Deploy and connect the cloud agent 
+      command: 
+        argv:
+              - "/usr/local/qualys/cloud-agent/bin/qualys-cloud-agent.sh" 
+              - "{{ activationid }}"
+              - "{{ customerid }}"
+    
+    - name: Remove the cloud agent .rpm file
+      file:
+       dest: "{{ agent_path }}"
+       state: absent
+      changed_when: false
